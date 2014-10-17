@@ -5,7 +5,8 @@ import org.eclipse.ui.XMLMemento;
 
 public class GenerationTimeLogger {
 
-	private static final String TIME = "time";
+	public static final String TIME = "time";
+	public static final String COUNT = "resources";
 
 	private static GenerationTimeLogger timeLogger;
 	private XMLMemento memento;
@@ -29,10 +30,33 @@ public class GenerationTimeLogger {
 		IMemento idMemento = memento.getChild(id);
 		if (idMemento == null) {
 			idMemento = memento.createChild(id);
+		}
+		if(idMemento.getInteger(TIME) == null){
 			idMemento.putInteger(TIME, time);
 		} else {
 			int duration = idMemento.getInteger(TIME);
 			idMemento.putInteger(TIME, duration + time);
+		}
+	}
+	
+	public void updateCount(String id, int count){
+		IMemento idMemento = memento.getChild(id);
+		if (idMemento == null) {
+			idMemento = memento.createChild(id);
+		}
+		if(idMemento.getInteger(COUNT) == null){
+			idMemento.putInteger(COUNT, count);
+		} else {
+			int oldCount = idMemento.getInteger(COUNT);
+			idMemento.putInteger(COUNT, oldCount + count);
+		}
+	}
+	
+	public void reset(){
+		if(memento.getChildren() != null && memento.getChildren().length != 0)
+		for(IMemento generator : memento.getChildren()){
+			generator.putInteger(COUNT, 0);
+			generator.putInteger(TIME, 0);
 		}
 	}
 }

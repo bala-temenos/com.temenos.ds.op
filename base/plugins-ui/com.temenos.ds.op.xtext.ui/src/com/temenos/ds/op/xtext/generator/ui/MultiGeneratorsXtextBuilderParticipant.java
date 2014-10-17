@@ -125,7 +125,9 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 		fileSystemAccess.setOutputConfigurations(outputConfigurations);
 		StopWatch stopWatch = new StopWatch();
 		generator.doGenerate(resource, fileSystemAccess);
-		GenerationTimeLogger.getInstance().updateTime(generatorId, (int)stopWatch.reset());
+		GenerationTimeLogger logger = GenerationTimeLogger.getInstance();
+		logger.updateTime(generatorId, (int)stopWatch.reset());
+		logger.updateCount(generatorId, 1);
 	}
 
 	@Override
