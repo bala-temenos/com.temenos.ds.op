@@ -73,6 +73,7 @@
 	  <import feature="org.eclipse.emf.ecore.xcore"/>
 	  <import feature="org.eclipse.emf.ecore.xcore.sdk"/>
 	  <import feature="org.eclipse.emf.ecore.xcore.ui"/>
+	  <import feature="org.eclipse.zest.sdk"/>
    </requires>
 
 </feature>

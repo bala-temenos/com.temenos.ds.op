@@ -114,6 +114,11 @@
 			<layout>p2</layout>
 			<url>http://download.eclipse.org/modeling/emf/emf/updates/releases/</url>
 		</repository>
+		<repository>
+			<id>org.eclipse.zest-1.5</id>
+			<layout>p2</layout>
+			<url>http://download.eclipse.org/tools/gef/updates/releases/</url>
+		</repository>
 			<!-- req. for org.eclipse.e4.core.tools in /*.base.sdk.repository/category.xml -->
 	<!-- Not working... :-( <repository> <id>vogella-e4tools-luna</id> <layout>p2</layout> 
 		<url>http://download.vogella.com/luna/e4tools</url> </repository> -->
