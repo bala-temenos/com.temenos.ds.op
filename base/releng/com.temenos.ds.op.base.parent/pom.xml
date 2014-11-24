@@ -103,6 +103,7 @@
 			<id>org.eclipse.gmf-3.2.0</id>
 			<layout>p2</layout>
 			<url>http://download.eclipse.org/modeling/gmp/updates/releases/</url>
+		</repository>
 		<repository>
 			<id>org.eclipse.sirius-2.0</id>
 			<layout>p2</layout>
