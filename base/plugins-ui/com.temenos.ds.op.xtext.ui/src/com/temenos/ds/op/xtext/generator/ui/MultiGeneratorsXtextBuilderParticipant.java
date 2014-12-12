@@ -55,11 +55,11 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 	
 	// private final static Logger logger = LoggerFactory.getLogger(MultiGeneratorsXtextBuilderParticipant.class);
 	
-	// This, incl. volatile, inspired by (copy/pasted from) org.eclipse.xtext.builder.impl.RegistryBuilderParticipant.participants
-	@Inject
-	private IExtensionRegistry extensionRegistry;
+	// These three, incl. volatile, inspired by (copy/pasted from) org.eclipse.xtext.builder.impl.RegistryBuilderParticipant
+	private @Inject	IExtensionRegistry extensionRegistry;
 	private volatile ImmutableList<IGenerator> generators;
 	private Map<String, IGenerator> classToGenerator;
+	
 	private ThreadLocal<IBuildContext> buildContextLocal = new ThreadLocal<IBuildContext>();
 
 	@Inject PreferenceStoreAccessImpl preferenceStoreAccess;
@@ -139,6 +139,7 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 		}
 		return generatorMarkers;
 	}
+	
 	protected Map<String, OutputConfiguration> getOutputConfigurations(IBuildContext context, String generatorId) {
 		IPreferenceStoreAccess preferenceStoreAccess = getOutputConfigurationProvider().getPreferenceStoreAccess();
 		PreferenceStoreAccessImpl preferenceStoreAccessImpl = (PreferenceStoreAccessImpl) preferenceStoreAccess;
@@ -252,6 +253,7 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 		// TODO better for future compat. to just make sure we @Inject an resourceServiceProvider where canHandle => true always instead of this short term solution:
 		return context.getDeltas();
 	}
+	
 	@Override
 	public void setOutputConfigurationProvider(
 			EclipseOutputConfigurationProvider outputConfigurationProvider) {
