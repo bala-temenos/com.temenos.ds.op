@@ -13,6 +13,9 @@
 <!-- 	
 		<module>plugins/com.temenos.ds.op.base.bundle</module>
 -->	
+		<module>plugins/com.temenos.ds.op.xtext</module>
+		<module>plugins-ui/com.temenos.ds.op.xtext.ui</module>
+
 		<module>features/com.temenos.ds.op.base.feature</module>
 		<module>features/com.temenos.ds.op.base.sdk.feature</module>
 		<module>tests/com.temenos.ds.op.base.tests</module>
