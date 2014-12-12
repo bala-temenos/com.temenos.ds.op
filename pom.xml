@@ -8,7 +8,7 @@
 	<packaging>pom</packaging>
 	
 	<modules>
-		<module>SUBS/eson</module>
+		<module>SUBS/org.eclipse.emf.eson</module>
 		<module>base</module>
 		<!-- <module>refex/com.temenos.ds.op.refex.parent</module> -->
 	</modules>

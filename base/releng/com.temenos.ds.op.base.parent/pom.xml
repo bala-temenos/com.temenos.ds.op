@@ -10,7 +10,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<tycho-version>0.20.0</tycho-version>
+		<tycho-version>0.22.0</tycho-version>
 	</properties>
 
 	<repositories>
@@ -28,15 +28,13 @@
 		<repository>
 			<id>p2.eclipse.luna</id>
 			<layout>p2</layout>
-			<url>http://download.eclipse.org/releases/luna/201406250900</url> <!-- NOT just http://download.eclipse.org/eclipse/updates/4.4milestones -->
-		</repository>
-<!--		
-		<repository>
-			<id>p2.eclipse.luna</id>
-			<layout>p2</layout>
 			<url>http://download.eclipse.org/releases/luna</url>
 		</repository>
--->
+		<repository>
+			<id>p2.eclipse.xtext</id>
+			<layout>p2</layout>
+			<url>http://download.eclipse.org/modeling/tmf/xtext/updates/composite/releases/</url>
+		</repository>
 		<repository>
 			<id>p2.takari-m2e-latest</id>
 			<layout>p2</layout>
@@ -47,7 +45,7 @@
 		<repository>
 			<id>p2.central-m2eclipse-tycho</id>
 			<layout>p2</layout>
-			<url>http://repo1.maven.org/maven2/.m2e/connectors/m2eclipse-tycho/0.7.0/N/0.7.0.201309291400/</url>
+			<url>http://repo1.maven.org/maven2/.m2e/connectors/m2eclipse-tycho/0.8.0/N/LATEST/</url>
 		</repository>
 		<repository>
 			<id>p2.eclipse-egit-nightly</id>

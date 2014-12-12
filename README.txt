@@ -73,6 +73,8 @@ git submodule update --remote
 
 Note that this creates entries in /.gitmodules... this has to be adapted e.g. if you move SUBS directory (incl. branch info if -b).
 
+To change the Git URL it doesn't seem to be sufficient to edit .gitmodules; I've had to git submodule deinit -f eson/; rm -rf eson/; git submodule add http://git.eclipse.org/gitroot/emf/org.eclipse.emf.eson.git; git submodule init; nano ../.gitmodules to clean-up.
+
 @see http://www.vogella.com/tutorials/Git/article.html#submodules
 
 
