@@ -8,5 +8,4 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Require-Bundle: org.eclipse.xtext.generator;bundle-version="2.6.0";visibility:=reexport,
  org.eclipse.xtext;bundle-version="[2.7.3,2.8.0)",
  org.slf4j.api;bundle-version="1.7.2"
-Export-Package: com.temenos.ds.op.xtext.generator,
- com.temenos.ds.op.xtext.util
+Export-Package: com.temenos.ds.op.xtext.util

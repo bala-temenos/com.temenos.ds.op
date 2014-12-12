@@ -20,16 +20,16 @@ import org.eclipse.xtext.generator.IGenerator;
  * 
  * This is better than if each IGenerator implementation does something like this itself. 
  * 
- * This should be in upstream core Xtext?
- * 
- * NOTE: MultiGeneratorsXtextBuilderParticipant takes this into account, and "unwraps" the WrappedException.
- * 
- * TODO MultiGeneratorXtextBuilderParticipantTest should test this.
- * 
  * @author Michael Vorburger
  */
 public abstract class IGeneratorThrowsWithThrowsException implements IGenerator {
 
+	// TODO: Move out from tests/ into prod, and make MultiGeneratorsXtextBuilderParticipant take this into account, and "unwraps" the WrappedException?
+	// TODO MultiGeneratorXtextBuilderParticipantTest should test this.
+	// This should be in upstream core Xtext?
+
+	// TODO Throws unrelated - add support for requesting org.eclipse.xtext.builder.IXtextBuilderParticipant.IBuildContext.needRebuild()
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.xtext.generator.IGenerator#doGenerate(org.eclipse.emf.ecore.resource.Resource, org.eclipse.xtext.generator.IFileSystemAccess)
 	 */
