@@ -44,6 +44,9 @@
       <import plugin="org.eclipse.ocl.ecore"/>
       <import plugin="org.apache.commons.net" version="3.1.0" />
       <import feature="org.eclipse.emf.workspace"/>
+      
+      <import plugin="com.temenos.ds.op.xtext"/>
+      <import plugin="com.temenos.ds.op.xtext.ui"/>
    </requires>
 
 </feature>
