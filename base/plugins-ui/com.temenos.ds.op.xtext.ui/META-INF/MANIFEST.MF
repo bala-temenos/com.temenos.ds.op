@@ -13,7 +13,10 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="3.10.0",
  org.slf4j.api;bundle-version="1.7.2",
  org.eclipse.ui.workbench,
  org.eclipse.xtext.ui,
- org.eclipse.xtext.ui.shared
+ org.eclipse.xtext.ui.shared,
+ org.eclipse.xtend.core,
+ org.eclipse.xtend.ide,
+ org.eclipse.jdt.core
 Export-Package: com.temenos.ds.op.xtext.generator.ui,
  com.temenos.ds.op.xtext.ui.internal
 Bundle-Activator: com.temenos.ds.op.xtext.ui.internal.NODslActivator

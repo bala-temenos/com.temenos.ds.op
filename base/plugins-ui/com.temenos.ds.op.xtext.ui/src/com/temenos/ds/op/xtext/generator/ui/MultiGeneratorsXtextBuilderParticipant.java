@@ -43,6 +43,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.temenos.ds.op.xtext.ui.internal.NODslActivator;
+import com.temenos.ds.op.xtext.ui.internal.se.JdtBasedClassLoaderProvider;
 
 
 /**
@@ -53,12 +54,14 @@ import com.temenos.ds.op.xtext.ui.internal.NODslActivator;
 public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /* implements IXtextBuilderParticipant */ {
 	// TODO MAYBE later send a proposal to Xtext core to split up BuilderParticipant so it's more suitable to be extended here
 	
-	// private final static Logger logger = LoggerFactory.getLogger(MultiGeneratorsXtextBuilderParticipant.class);
+	private final static Logger logger = LoggerFactory.getLogger(MultiGeneratorsXtextBuilderParticipant.class);
 	
 	// These three, incl. volatile, inspired by (copy/pasted from) org.eclipse.xtext.builder.impl.RegistryBuilderParticipant
 	private @Inject	IExtensionRegistry extensionRegistry;
 	private volatile ImmutableList<IGenerator> generators;
 	private Map<String, IGenerator> classToGenerator;
+	
+	private @Inject	JdtBasedClassLoaderProvider classloaderProvider;
 	
 	private ThreadLocal<IBuildContext> buildContextLocal = new ThreadLocal<IBuildContext>();
 
@@ -89,17 +92,20 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 				registerCurrentSourceFolder(context, delta, fileSystemAccess);
 				// TODO inject generator with lang specific configuration.. is to return only class, not instance, and re-lookup from lang specific injector obtained from extension going to have any perf. drawback? measure it.
 				for (IGenerator generator : getGenerators()) {
-					String generatorId = generator.getClass().getName(); // TODO use new Id instead of class name..
-					preferenceStoreAccess.setLanguageNameAsQualifier(generatorId);
-					
-					// This is copy/pasted from BuilderParticipant.build() - TODO refactor Xtext (PR) to be able to share code
-					// TODO do we need to copy/paste more here.. what's all the Cleaning & Markers stuff??  
-					final Map<String, OutputConfiguration> outputConfigurations = getOutputConfigurations(context, generatorId);
-					// TODO refreshOutputFolders(context, outputConfigurations, subMonitor.newChild(1));
-					fileSystemAccess.setOutputConfigurations(outputConfigurations);
-					StopWatch stopWatch = new StopWatch();
-					generator.doGenerate(resource, fileSystemAccess);
-					GenerationTimeLogger.getInstance().updateTime(generatorId, (int)stopWatch.reset());
+					generate(context, fileSystemAccess, resource, generator);
+				}
+
+				// TODO look up a list, don't hard-code just one, as for first test..
+				// ClassLoader cl = classloaderProvider.getClassLoader(ctx);
+				String generatorClassName = "test.Generator";
+				Optional<IGenerator> generator = classloaderProvider.getInstance(resource, generatorClassName);
+				if (generator.isPresent()) {
+					generate(context, fileSystemAccess, resource, generator.get());
+				} else {
+					final String msg = "Generator class could not be found on this project: " + generatorClassName;
+					logger.error(msg);
+					// TODO Why is this not shown to the users in the UI?? Would it be, if it was a CoreException? Then they all need to be wrapped..
+					throw new IllegalStateException(msg);
 				}
 
 			} catch (RuntimeException e) {
@@ -109,6 +115,20 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 				throw e;
 			}
 		}
+	}
+
+	protected void generate(IBuildContext context, EclipseResourceFileSystemAccess2 fileSystemAccess, Resource resource, IGenerator generator) {
+		String generatorId = generator.getClass().getName(); // TODO use new Id instead of class name..
+		preferenceStoreAccess.setLanguageNameAsQualifier(generatorId);
+		
+		// This is copy/pasted from BuilderParticipant.build() - TODO refactor Xtext (PR) to be able to share code
+		// TODO do we need to copy/paste more here.. what's all the Cleaning & Markers stuff??  
+		final Map<String, OutputConfiguration> outputConfigurations = getOutputConfigurations(context, generatorId);
+		// TODO refreshOutputFolders(context, outputConfigurations, subMonitor.newChild(1));
+		fileSystemAccess.setOutputConfigurations(outputConfigurations);
+		StopWatch stopWatch = new StopWatch();
+		generator.doGenerate(resource, fileSystemAccess);
+		GenerationTimeLogger.getInstance().updateTime(generatorId, (int)stopWatch.reset());
 	}
 
 	protected String getGeneratorID(IGenerator generator) {
