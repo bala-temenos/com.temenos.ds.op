@@ -52,7 +52,7 @@ import com.temenos.ds.op.xtext.ui.internal.NODslActivator;
  * @author Umesh
  */
 @SuppressWarnings("restriction")
-public class MultiGeneratorXtextBuilderParticipantTest extends AbstractBuilderTest{
+public class MultiGeneratorXtextBuilderParticipantTest extends AbstractBuilderTest {
 
 	// NOTE: You need the org.xtext.example.mydsl (and its *.ui) plugins open for this test
 

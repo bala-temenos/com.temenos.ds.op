@@ -26,6 +26,7 @@ import com.google.inject.Module;
  * 
  * @author Michael Vorburger
  */
+@SuppressWarnings("restriction")
 public class NODslActivator extends AbstractUIPlugin {
 	private static final Logger logger = LoggerFactory.getLogger(NODslActivator.class);
 	
@@ -36,6 +37,7 @@ public class NODslActivator extends AbstractUIPlugin {
 	@Override
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
+		injector = createInjector(context);
 		INSTANCE = this;
 	}
 	
@@ -51,20 +53,29 @@ public class NODslActivator extends AbstractUIPlugin {
 	}
 	
 	public Injector getInjector() {
-			if (injector == null) {
-			injector = createInjector();
+		if (injector == null) {
+			throw new IllegalStateException("Needs start() first");
 		}
 		return injector;
 	}
 	
-	protected Injector createInjector() {
+	protected Injector createInjector(BundleContext context) {
 		try {
 //			Module runtimeModule = getRuntimeModule();
 			Module sharedStateModule = getSharedStateModule();
 			Module uiModule = getUiModule();
 			Module noopModule = getNoopModule();
 			Module eclipseModule = getEclipseModule();
-			Module mergedModule = Modules2.mixin(/*runtimeModule, */ sharedStateModule,  uiModule, eclipseModule, noopModule);
+
+			// TODO Is this right? Do I really have to repeat all of these standard Xtext modules here, above and below?? How to get them all automatically, future proof?
+
+			// Module sharedContributionModule = new DefaultSharedContribution();
+			// Module sharedContributionWithJDTModule = new SharedContributionWithJDT();
+			// Module sharedModule = new SharedModule(context);
+			
+			Module mergedModule = Modules2.mixin(/*runtimeModule, */ sharedStateModule,  uiModule, eclipseModule, noopModule
+					// , sharedContributionModule, sharedContributionWithJDTModule, sharedModule
+					);
 			return Guice.createInjector(mergedModule);
 		} catch (Exception e) {
 			logger.error("Failed to create injector: " + e.getMessage(), e);
