@@ -85,7 +85,7 @@ public class MultiGeneratorXtextBuilderParticipantTest extends AbstractBuilderTe
 		file.create(new StringInputStream("Hello safasdt!"), true, monitor());
 		project.build(IncrementalProjectBuilder.FULL_BUILD, monitor());
 		waitForAutoBuild();
-		IFile generatedFile = project.getFile("./test-gen/Foo.mydsl");
+		IFile generatedFile = project.getFile("./test-gen/Foo.mydsl.txt");
 		assertTrue(generatedFile.exists());
 
 		setDefaultOutputFolderDirectory(project, TEST_GENERATOR_ID, "other-gen");
@@ -95,7 +95,7 @@ public class MultiGeneratorXtextBuilderParticipantTest extends AbstractBuilderTe
 		file.create(source, true, monitor());
 		project.build(IncrementalProjectBuilder.FULL_BUILD, monitor());
 		waitForAutoBuild();
-		generatedFile = project.getFile("./other-gen/Bar.mydsl");
+		generatedFile = project.getFile("./other-gen/Bar.mydsl.txt");
 		assertTrue(generatedFile.exists());
 		
 		// Test file deletion
