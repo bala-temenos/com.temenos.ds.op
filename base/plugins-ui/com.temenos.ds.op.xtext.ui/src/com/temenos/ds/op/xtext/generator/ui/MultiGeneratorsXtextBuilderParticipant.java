@@ -12,6 +12,8 @@ package com.temenos.ds.op.xtext.generator.ui;
 
 import static com.google.common.collect.Maps.newHashMap;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +31,7 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.xtext.builder.BuilderParticipant;
 import org.eclipse.xtext.builder.EclipseOutputConfigurationProvider;
 import org.eclipse.xtext.builder.EclipseResourceFileSystemAccess2;
+import org.eclipse.xtext.generator.IFileSystemAccess;
 import org.eclipse.xtext.generator.IGenerator;
 import org.eclipse.xtext.generator.OutputConfiguration;
 import org.eclipse.xtext.resource.IResourceDescription.Delta;
@@ -82,6 +85,9 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 	protected void handleChangedContents(Delta delta, IBuildContext context,
 			EclipseResourceFileSystemAccess2 fileSystemAccess) throws CoreException {
 
+		if (delta.getUri().scheme().equals("java"))
+			return; // Skip any Xbase java:/Objects/test.Generator like resources
+		
 		// copy/paste from super() -- TODO refactor BuilderParticipant with more protected methods so that this can be done cleanly
 		Resource resource = context.getResourceSet().getResource(delta.getUri(), true);
 		if (shouldGenerate(resource, context)) {
@@ -99,7 +105,17 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 				String generatorClassName = "test.Generator";
 				Optional<IGenerator> generator = classloaderProvider.getInstance(resource, generatorClassName);
 				if (generator.isPresent()) {
-					generate(context, fileSystemAccess, resource, generator.get(), generatorClassName);
+					final Object generator2 = generator.get();
+					// ClassCastException final IGenerator generator3 = (IGenerator) generator2;
+					// TODO generate(context, fileSystemAccess, resource, generator3, generatorClassName);
+					
+					try {
+						Method method = generator2.getClass().getMethod("doGenerate", Resource.class, IFileSystemAccess.class);
+						method.invoke(generator2, resource, fileSystemAccess);
+					} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+						logger.error("Cry like a baby..", e); // TODO integrate with error handler below
+					}
+
 				} else {
 					final String msg = "Generator class could not be found on this project: " + generatorClassName;
 					logger.error(msg);
