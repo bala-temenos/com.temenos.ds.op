@@ -15,6 +15,7 @@ import static com.google.common.collect.Maps.newHashMap;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
@@ -38,9 +39,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.HashBiMap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.temenos.ds.op.xtext.ui.internal.NODslActivator;
 import com.temenos.ds.op.xtext.ui.internal.se.JdtBasedClassLoaderProvider;
@@ -58,14 +59,10 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 	
 	// These three, incl. volatile, inspired by (copy/pasted from) org.eclipse.xtext.builder.impl.RegistryBuilderParticipant
 	private @Inject	IExtensionRegistry extensionRegistry;
-	private volatile ImmutableList<IGenerator> generators;
-	private Map<String, IGenerator> classToGenerator;
-	
+	private volatile ImmutableMap<IGenerator, String> generatorToId;
 	private @Inject	JdtBasedClassLoaderProvider classloaderProvider;
-	
 	private ThreadLocal<IBuildContext> buildContextLocal = new ThreadLocal<IBuildContext>();
-
-	@Inject PreferenceStoreAccessImpl preferenceStoreAccess;
+	private @Inject PreferenceStoreAccessImpl preferenceStoreAccess;
 	
 	public PreferenceStoreAccessImpl getPreferenceStoreAccess() {
 		return preferenceStoreAccess;
@@ -91,8 +88,10 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 			try {
 				registerCurrentSourceFolder(context, delta, fileSystemAccess);
 				// TODO inject generator with lang specific configuration.. is to return only class, not instance, and re-lookup from lang specific injector obtained from extension going to have any perf. drawback? measure it.
-				for (IGenerator generator : getGenerators()) {
-					generate(context, fileSystemAccess, resource, generator);
+				for (Entry<IGenerator, String> entry : getGenerators().entrySet()) {
+					IGenerator generator = entry.getKey();
+					String generatorId = entry.getValue();
+					generate(context, fileSystemAccess, resource, generator, generatorId);
 				}
 
 				// TODO look up a list, don't hard-code just one, as for first test..
@@ -100,7 +99,7 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 				String generatorClassName = "test.Generator";
 				Optional<IGenerator> generator = classloaderProvider.getInstance(resource, generatorClassName);
 				if (generator.isPresent()) {
-					generate(context, fileSystemAccess, resource, generator.get());
+					generate(context, fileSystemAccess, resource, generator.get(), generatorClassName);
 				} else {
 					final String msg = "Generator class could not be found on this project: " + generatorClassName;
 					logger.error(msg);
@@ -117,10 +116,8 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 		}
 	}
 
-	protected void generate(IBuildContext context, EclipseResourceFileSystemAccess2 fileSystemAccess, Resource resource, IGenerator generator) {
-		String generatorId = generator.getClass().getName(); // TODO use new Id instead of class name..
+	protected void generate(IBuildContext context, EclipseResourceFileSystemAccess2 fileSystemAccess, Resource resource, IGenerator generator, String generatorId) {
 		preferenceStoreAccess.setLanguageNameAsQualifier(generatorId);
-		
 		// This is copy/pasted from BuilderParticipant.build() - TODO refactor Xtext (PR) to be able to share code
 		// TODO do we need to copy/paste more here.. what's all the Cleaning & Markers stuff??  
 		final Map<String, OutputConfiguration> outputConfigurations = getOutputConfigurations(context, generatorId);
@@ -131,10 +128,6 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 		GenerationTimeLogger.getInstance().updateTime(generatorId, (int)stopWatch.reset());
 	}
 
-	protected String getGeneratorID(IGenerator generator) {
-		return generator.getClass().getName(); // TODO use new Id instead of class name..
-	}
-
 	@Override
 	protected Map<OutputConfiguration, Iterable<IMarker>> getGeneratorMarkers(
 			IProject builtProject,Collection<OutputConfiguration> outputConfigurations)
@@ -143,8 +136,8 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 		// TODO: Check the impact of modifying this method on other tasks
 		Map<OutputConfiguration, Iterable<IMarker>> generatorMarkers = newHashMap();
 
-		for (IGenerator generator : getGenerators()) {
-			String generatorId = getGeneratorID(generator);
+		for (Entry<IGenerator, String> entry : getGenerators().entrySet()) {
+			String generatorId = entry.getValue();
 			final Map<String, OutputConfiguration> modifiedConfigs = getOutputConfigurations(buildContextLocal.get(), generatorId);
 			if (generatorMarkers.isEmpty()) {
 				generatorMarkers = super.getGeneratorMarkers(builtProject, modifiedConfigs.values());
@@ -168,9 +161,9 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 	}
 	
 	// inspired by (copy/pasted from) org.eclipse.xtext.builder.impl.RegistryBuilderParticipant.getParticipants()
-	protected ImmutableList<IGenerator> getGenerators() {
-		ImmutableList<IGenerator> result = generators;
-		if (generators == null) {
+	protected ImmutableMap<IGenerator, String> getGenerators() {
+		ImmutableMap<IGenerator, String> result = generatorToId;
+		if (generatorToId == null) {
 			result = initGenerators();
 		}
 		return result;
@@ -178,20 +171,19 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 	
 	// inspired by (copy/pasted from) org.eclipse.xtext.builder.impl.RegistryBuilderParticipant.initParticipants()
 	// If later sending a proposal to Xtext core to split up BuilderParticipant so it's more suitable to be extended here, refactor to make this re-usable across instead copy/paste 
-	private synchronized ImmutableList<IGenerator> initGenerators() {
-		ImmutableList<IGenerator> result = generators;
+	protected synchronized ImmutableMap<IGenerator, String> initGenerators() {
+		ImmutableMap<IGenerator, String> result = generatorToId;
 		if (result == null) {
-			if (classToGenerator == null) {
-				classToGenerator = Maps.newHashMap();
+			if (generatorToId == null) {
+				HashBiMap<String, IGenerator> idToGenerator = HashBiMap.create();
 				NODslActivator activator = NODslActivator.getInstance();
 				if (activator != null) {
 					String pluginID = activator.getBundle().getSymbolicName();
-					GeneratorReader<IGenerator> reader = new GeneratorReader<IGenerator>(extensionRegistry, pluginID, "multigenerator", classToGenerator);
+					GeneratorReader<IGenerator> reader = new GeneratorReader<IGenerator>(extensionRegistry, pluginID, "multigenerator", idToGenerator);
 					reader.readRegistry();
 				}
+				generatorToId = ImmutableMap.copyOf(idToGenerator.inverse());
 			}
-			result = ImmutableList.copyOf(classToGenerator.values());
-			generators = result;
 		}
 		return result;
 	}
@@ -203,42 +195,45 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 		private final static Logger logger = LoggerFactory.getLogger(MultiGeneratorsXtextBuilderParticipant.GeneratorReader.class);
 
 		private static final String ATT_CLASS = "class";
-		// private static final String ATT_BUILDER_ID = "builderId";
-		
-		protected final String extensionPointID;
-		protected final Map<String, T> classNameToInstance;
+		private static final String ATT_ID = "id";
 
-		public GeneratorReader(IExtensionRegistry pluginRegistry, String pluginID, String extensionPointID, Map<String, T> classNameToInstance) {
+		protected final String extensionPointID;
+		protected final Map<String, T> generatorIdToInstance;
+
+		public GeneratorReader(IExtensionRegistry pluginRegistry, String pluginID, String extensionPointID, Map<String, T> generatorIdToInstance) {
 			super(pluginRegistry, pluginID, extensionPointID);
 			this.extensionPointID = extensionPointID;
-			this.classNameToInstance = classNameToInstance;
+			this.generatorIdToInstance = generatorIdToInstance;
 		}
 		
 		@Override
 		protected boolean readElement(IConfigurationElement element, boolean add) {
 			boolean result = false;
 			if (element.getName().equals(extensionPointID)) {
-				String className = element.getAttribute(ATT_CLASS);
+				final String id = element.getAttribute(ATT_ID);
+				final String className = element.getAttribute(ATT_CLASS);
 				if (className == null) {
 					logMissingAttribute(element, ATT_CLASS);
+				} else if (id == null) {
+					logMissingAttribute(element, ATT_ID);
 				} else if (add) {
-					if (classNameToInstance.containsKey(className)) {
-						logger.warn("The builder participant '" + className + "' was registered twice."); //$NON-NLS-1$ //$NON-NLS-2$
+					if (generatorIdToInstance.containsKey(id)) {
+						logger.warn("The builder participant '" + id + "' was registered twice."); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 					Optional<T> instance = get(element);
 					if (!instance.isPresent()) {
 						result = false;
 					}
-					classNameToInstance.put(className, instance.get());
+					generatorIdToInstance.put(id, instance.get());
 					// ? participants = null;
 					result = true;
 				} else {
-					classNameToInstance.remove(className);
+					generatorIdToInstance.remove(id);
 					// ? participants = null;
 					result = true;
 				}
 			}
-				return result;
+			return result;
 		}
 
 

@@ -18,7 +18,7 @@
       </annotation>
       <complexType>
          <sequence>
-         	<element ref="multigenerator"/>
+            <element ref="multigenerator"/>
          </sequence>
          <attribute name="point" type="string" use="required">
             <annotation>
@@ -52,11 +52,18 @@
          <attribute name="class" type="string" use="required">
             <annotation>
                <documentation>
-                  
+                  Java class implementing org.eclipse.xtext.generator.IGenerator
                </documentation>
                <appinfo>
                   <meta.attribute kind="java" basedOn=":org.eclipse.xtext.generator.IGenerator"/>
                </appinfo>
+            </annotation>
+         </attribute>
+        <attribute name="id" type="string" use="required">
+            <annotation>
+               <documentation>
+                  ID of generator. Use classname if you like, but the idea is that if you refactor the class name or package, this ID stays stable, and existing preferences for this generator remain valid.  
+               </documentation>
             </annotation>
          </attribute>
       </complexType>
@@ -87,7 +94,7 @@
 
 &lt;p&gt;Multi Generators do not have to use Google Guice to instantiate, as they will anyway be instantianted to be injected with language specific configuration.
 
-&lt;p&gt;Multi Generators are not restricted to only run on certain file extensions. They decide when to generate by looking at the resource's content (or URI file extension).
+&lt;p&gt;Multi Generators are not restricted to only run on certain file extensions. They decide when to generate by looking at the resource&apos;s content (or URI file extension).
       </documentation>
    </annotation>
 

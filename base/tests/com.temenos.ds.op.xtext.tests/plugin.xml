@@ -4,7 +4,8 @@
    <extension
          point="com.temenos.ds.op.xtext.ui.multigenerator">
       <multigenerator
-            class="com.temenos.ds.op.xtext.generator.tests.TestMultiGenerator">
+            class="com.temenos.ds.op.xtext.generator.tests.TestMultiGenerator"
+            id="com.temenos.ds.op.xtext.generator.tests.TestMultiGeneratorID"> <!-- For the test, don't make this the same as the class name -->
       </multigenerator>
    </extension>
      <extension

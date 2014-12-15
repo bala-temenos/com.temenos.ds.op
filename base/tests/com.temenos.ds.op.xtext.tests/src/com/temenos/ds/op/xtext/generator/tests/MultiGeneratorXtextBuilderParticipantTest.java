@@ -56,6 +56,7 @@ public class MultiGeneratorXtextBuilderParticipantTest extends AbstractBuilderTe
 
 	// NOTE: You need the org.xtext.example.mydsl (and its *.ui) plugins open for this test
 
+	private static final String TEST_GENERATOR_ID = "com.temenos.ds.op.xtext.generator.tests.TestMultiGeneratorID";
 	private MultiGeneratorsXtextBuilderParticipant participant;
 	private PreferenceStoreAccessImpl preferenceStoreAccess;
 
@@ -78,7 +79,7 @@ public class MultiGeneratorXtextBuilderParticipantTest extends AbstractBuilderTe
 		IProject project = createXtextJavaProject("testGenerateIntoProjectOutputDirectory").getProject();
 		IFolder folder = project.getProject().getFolder("src");
 
-		setDefaultOutputFolderDirectory(project, "com.temenos.ds.op.xtext.generator.tests.TestMultiGenerator", "./test-gen");
+		setDefaultOutputFolderDirectory(project, TEST_GENERATOR_ID, "./test-gen");
 
 		IFile file = folder.getFile("Foo" + F_EXT);
 		file.create(new StringInputStream("Hello safasdt!"), true, monitor());
@@ -87,7 +88,7 @@ public class MultiGeneratorXtextBuilderParticipantTest extends AbstractBuilderTe
 		IFile generatedFile = project.getFile("./test-gen/Foo.mydsl");
 		assertTrue(generatedFile.exists());
 
-		setDefaultOutputFolderDirectory(project, "com.temenos.ds.op.xtext.generator.tests.TestMultiGenerator", "other-gen");
+		setDefaultOutputFolderDirectory(project, TEST_GENERATOR_ID, "other-gen");
 
 		file = folder.getFile("Bar" + F_EXT);
 		InputStream source = new StringInputStream("Hello bar!");
