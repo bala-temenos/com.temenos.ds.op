@@ -4,7 +4,7 @@ Bundle-Name: Xtext Utils UI
 Bundle-SymbolicName: com.temenos.ds.op.xtext.ui;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: Michael Vorburger, for TEMENOS
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Require-Bundle: org.eclipse.core.runtime;bundle-version="3.10.0",
  org.eclipse.xtext;bundle-version="2.6.0",
  org.eclipse.xtext.builder;bundle-version="2.6.0",
