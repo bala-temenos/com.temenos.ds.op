@@ -12,8 +12,6 @@ package com.temenos.ds.op.xtext.generator.ui;
 
 import static com.google.common.collect.Maps.newHashMap;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +29,6 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.xtext.builder.BuilderParticipant;
 import org.eclipse.xtext.builder.EclipseOutputConfigurationProvider;
 import org.eclipse.xtext.builder.EclipseResourceFileSystemAccess2;
-import org.eclipse.xtext.generator.IFileSystemAccess;
 import org.eclipse.xtext.generator.IGenerator;
 import org.eclipse.xtext.generator.OutputConfiguration;
 import org.eclipse.xtext.resource.IResourceDescription.Delta;
@@ -112,14 +109,8 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 				}
 				
 				final Object generator2 = generator.get();
-				// ClassCastException final IGenerator generator3 = (IGenerator) generator2;
-				// TODO generate(context, fileSystemAccess, resource, generator3, generatorClassName);
-				try {
-					Method method = generator2.getClass().getMethod("doGenerate", Resource.class, IFileSystemAccess.class);
-					method.invoke(generator2, resource, fileSystemAccess);
-				} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-					logger.error("Cry like a baby..", e); // TODO integrate with error handler below
-				}
+				IGenerator generator3 = (IGenerator) generator2;
+				generate(context, fileSystemAccess, resource, generator3, generatorClassName);
 
 			} catch (RuntimeException e) {
 				if (e.getCause() instanceof CoreException) {
