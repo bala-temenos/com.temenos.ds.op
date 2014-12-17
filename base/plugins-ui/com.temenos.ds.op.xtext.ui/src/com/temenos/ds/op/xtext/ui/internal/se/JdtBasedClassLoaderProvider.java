@@ -21,6 +21,17 @@ public class JdtBasedClassLoaderProvider extends JdtBasedProcessorProvider {
 
 	// TODO Propose to Xtext to refactor JdtBasedProcessorProvider, and its parent ProcessorInstanceForJvmTypeProvider, into a more generic ClassLoaderProvider
 	
+	protected Class<?> parentClassLoaderClass;
+	
+	public void setParentClassLoaderClass(Class<?> parentClassLoaderClass) {
+		this.parentClassLoaderClass = parentClassLoaderClass;
+	}
+
+	protected ClassLoader getParentClassLoader() {
+		// NOTE super() is hard-coded to TransformationContext - but we use IGenerator
+		return parentClassLoaderClass.getClassLoader();
+	}
+	
 	@SuppressWarnings("unchecked")
 	public <T> Optional<T> getInstance(Resource ctx, String identifier) {
 		Optional<ClassLoader> classLoader = getClassLoader(ctx, identifier);
@@ -37,7 +48,7 @@ public class JdtBasedClassLoaderProvider extends JdtBasedProcessorProvider {
 	protected Optional<ClassLoader> getClassLoader(Resource ctx, String identifier) {
 		final Optional<IJavaProject> project = getJavaProject(ctx);
 		if (project.isPresent())
-			return Optional.fromNullable(this.createClassLoader(identifier, project.get()));
+			return Optional.fromNullable(createClassLoader(identifier, project.get()));
 		else
 			return Optional.absent();
 	}
@@ -66,7 +77,7 @@ public class JdtBasedClassLoaderProvider extends JdtBasedProcessorProvider {
 //	public ClassLoader getClassLoader(ResourceSet _resourceSet) {
 //		Object _classpathURIContext = ((XtextResourceSet) _resourceSet).getClasspathURIContext();
 //		final IJavaProject project = ((IJavaProject) _classpathURIContext);
-//		return this.createClassLoaderForJavaProject(project);
+//		return createClassLoaderForJavaProject(project);
 //	}
 
 }

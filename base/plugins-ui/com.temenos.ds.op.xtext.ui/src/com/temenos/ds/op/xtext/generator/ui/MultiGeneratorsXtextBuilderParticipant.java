@@ -101,26 +101,24 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 				}
 
 				// TODO look up a list, don't hard-code just one, as for first test..
-				// ClassLoader cl = classloaderProvider.getClassLoader(ctx);
 				String generatorClassName = "test.Generator";
+				classloaderProvider.setParentClassLoaderClass(IGenerator.class);
 				Optional<IGenerator> generator = classloaderProvider.getInstance(resource, generatorClassName);
-				if (generator.isPresent()) {
-					final Object generator2 = generator.get();
-					// ClassCastException final IGenerator generator3 = (IGenerator) generator2;
-					// TODO generate(context, fileSystemAccess, resource, generator3, generatorClassName);
-					
-					try {
-						Method method = generator2.getClass().getMethod("doGenerate", Resource.class, IFileSystemAccess.class);
-						method.invoke(generator2, resource, fileSystemAccess);
-					} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-						logger.error("Cry like a baby..", e); // TODO integrate with error handler below
-					}
-
-				} else {
+				if (!generator.isPresent()) {
 					final String msg = "Generator class could not be found on this project: " + generatorClassName;
 					logger.error(msg);
 					// TODO Why is this not shown to the users in the UI?? Would it be, if it was a CoreException? Then they all need to be wrapped..
 					throw new IllegalStateException(msg);
+				}
+				
+				final Object generator2 = generator.get();
+				// ClassCastException final IGenerator generator3 = (IGenerator) generator2;
+				// TODO generate(context, fileSystemAccess, resource, generator3, generatorClassName);
+				try {
+					Method method = generator2.getClass().getMethod("doGenerate", Resource.class, IFileSystemAccess.class);
+					method.invoke(generator2, resource, fileSystemAccess);
+				} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+					logger.error("Cry like a baby..", e); // TODO integrate with error handler below
 				}
 
 			} catch (RuntimeException e) {
