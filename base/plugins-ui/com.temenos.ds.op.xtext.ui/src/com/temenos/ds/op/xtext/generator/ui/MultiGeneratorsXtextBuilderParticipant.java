@@ -89,7 +89,9 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 		Resource resource = context.getResourceSet().getResource(delta.getUri(), true);
 		if (shouldGenerate(resource, context)) {
 			try {
-				registerCurrentSourceFolder(context, delta, fileSystemAccess);
+				// TODO commented out to compile with 2.5.3 - does it still work?? Re-enable when upgrading to 2.7.3 or 2.8.0..
+				// registerCurrentSourceFolder(context, delta, fileSystemAccess);
+				
 				// TODO inject generator with lang specific configuration.. is to return only class, not instance, and re-lookup from lang specific injector obtained from extension going to have any perf. drawback? measure it.
 				for (Entry<IGenerator, String> entry : getGenerators().entrySet()) {
 					IGenerator generator = entry.getKey();
