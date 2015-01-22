@@ -54,8 +54,9 @@ import com.temenos.ds.op.xtext.ui.internal.NODslActivator;
 @SuppressWarnings("restriction")
 public class MultiGeneratorXtextBuilderParticipantTest extends AbstractBuilderTest {
 
-	// NOTE: You need the org.xtext.example.mydsl (and its *.ui) plugins open for this test
-
+	// This is a minimalistic Xtext grammar. The point of this isn't this Grammar itself - we just need some, any, test grammar.  Using Xtext's Xtext itself is easier & causes one dependency less (e.g. we don't need a grammar for a "*.mydsl")
+	private static final String MINIMAL_VALID_XTEXT_GRAMMAR = "grammar test.Minimal import \"http://www.eclipse.org/emf/2002/Ecore\" as ecore generate minimal \"minimal\" Greeting: 'Hello' name=S; terminal S: ('a'..'z')*;";
+	
 	private static final String TEST_GENERATOR_ID = "com.temenos.ds.op.xtext.generator.tests.TestMultiGeneratorID";
 	private MultiGeneratorsXtextBuilderParticipant participant;
 	private PreferenceStoreAccessImpl preferenceStoreAccess;
@@ -81,21 +82,21 @@ public class MultiGeneratorXtextBuilderParticipantTest extends AbstractBuilderTe
 
 		setDefaultOutputFolderDirectory(project, TEST_GENERATOR_ID, "./test-gen");
 
-		IFile file = folder.getFile("Foo" + F_EXT);
-		file.create(new StringInputStream("Hello safasdt!"), true, monitor());
+		IFile file = folder.getFile("Minimal1.xtext");
+		file.create(new StringInputStream(MINIMAL_VALID_XTEXT_GRAMMAR), true, monitor());
 		project.build(IncrementalProjectBuilder.FULL_BUILD, monitor());
 		waitForAutoBuild();
-		IFile generatedFile = project.getFile("./test-gen/Foo.mydsl.txt");
+		IFile generatedFile = project.getFile("./test-gen/Minimal1.xtext.txt");
 		assertTrue(generatedFile.exists());
 
 		setDefaultOutputFolderDirectory(project, TEST_GENERATOR_ID, "other-gen");
 
-		file = folder.getFile("Bar" + F_EXT);
-		InputStream source = new StringInputStream("Hello bar!");
+		file = folder.getFile("Minimal2.xtext");
+		InputStream source = new StringInputStream(MINIMAL_VALID_XTEXT_GRAMMAR);
 		file.create(source, true, monitor());
 		project.build(IncrementalProjectBuilder.FULL_BUILD, monitor());
 		waitForAutoBuild();
-		generatedFile = project.getFile("./other-gen/Bar.mydsl.txt");
+		generatedFile = project.getFile("./other-gen/Minimal2.xtext.txt");
 		assertTrue(generatedFile.exists());
 		
 		// Test file deletion

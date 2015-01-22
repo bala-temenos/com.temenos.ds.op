@@ -32,7 +32,6 @@ import com.temenos.ds.op.xtext.ui.internal.NODslActivator;
  */
 @SuppressWarnings("restriction")
 public abstract class AbstractBuilderTest extends Assert implements IResourceDescription.Event.Listener {
-	public final String F_EXT = ".mydsl";
 	private volatile List<Event> events = Lists.newArrayList();
 
 	@Before
