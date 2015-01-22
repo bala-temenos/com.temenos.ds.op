@@ -142,8 +142,13 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 
 		// TODO: Check the impact of modifying this method on other tasks
 		Map<OutputConfiguration, Iterable<IMarker>> generatorMarkers = newHashMap();
-
-		for (Entry<IGenerator, String> entry : getGenerators().entrySet()) {
+		
+		final ImmutableMap<IGenerator, String> generators = getGenerators();
+		if (generators == null)
+			// TODO This shouldn't happen, but it sometimes does, seen NPE in following line, debug why, and fix root cause
+			return generatorMarkers;
+		
+		for (Entry<IGenerator, String> entry : generators.entrySet()) {
 			String generatorId = entry.getValue();
 			final Map<String, OutputConfiguration> modifiedConfigs = getOutputConfigurations(buildContextLocal.get(), generatorId);
 			if (generatorMarkers.isEmpty()) {
