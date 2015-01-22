@@ -19,11 +19,10 @@ import static org.eclipse.xtext.junit4.ui.util.IResourcesSetupUtil.waitForAutoBu
 import static org.eclipse.xtext.junit4.ui.util.JavaProjectSetupUtil.addProjectReference;
 import static org.eclipse.xtext.junit4.ui.util.JavaProjectSetupUtil.createJavaProject;
 
-import java.io.InputStream;
-
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.OperationCanceledException;
@@ -76,30 +75,29 @@ public class MultiGeneratorXtextBuilderParticipantTest extends AbstractBuilderTe
 	}
 
 	@Test
-	public void testMultiGeneratorXtextBuilderParticipant() throws Exception {
+	public void testMultiGeneratorXtextBuilderParticipantWithGeneratorInPlugin() throws Exception {
 		IProject project = createXtextJavaProject("testGenerateIntoProjectOutputDirectory").getProject();
-		IFolder folder = project.getProject().getFolder("src");
+		createFileAndAssertGenFile(project, "src/Minimal1.xtext", "./test-gen", "test-gen/Minimal1.xtext.txt");		
+		createFileAndAssertGenFile(project, "src/Minimal2.xtext", "./other-gen", "other-gen/Minimal2.xtext.txt");		
+	}
 
-		setDefaultOutputFolderDirectory(project, TEST_GENERATOR_ID, "./test-gen");
+	private void createFileAndAssertGenFile(IProject project, String sourceFileName, String outputFolderName, String genFileName) throws Exception {
+		setDefaultOutputFolderDirectory(project, TEST_GENERATOR_ID, outputFolderName);
+		IFile model1 = createFile(project, sourceFileName, MINIMAL_VALID_XTEXT_GRAMMAR);
+		IFile generatedFile = project.getFile(genFileName);
+		assertTrue(generatedFile.exists());
+		deleteModelFileAndAssertGenFileAlsoGotDeleted(model1, generatedFile);
+	}
 
-		IFile file = folder.getFile("Minimal1.xtext");
-		file.create(new StringInputStream(MINIMAL_VALID_XTEXT_GRAMMAR), true, monitor());
+	private IFile createFile(IProject project, String fileName, String fileContent) throws CoreException {
+		IFile file = project.getFile(fileName);
+		file.create(new StringInputStream(fileContent), true, monitor());
 		project.build(IncrementalProjectBuilder.FULL_BUILD, monitor());
 		waitForAutoBuild();
-		IFile generatedFile = project.getFile("./test-gen/Minimal1.xtext.txt");
-		assertTrue(generatedFile.exists());
+		return file;
+	}
 
-		setDefaultOutputFolderDirectory(project, TEST_GENERATOR_ID, "other-gen");
-
-		file = folder.getFile("Minimal2.xtext");
-		InputStream source = new StringInputStream(MINIMAL_VALID_XTEXT_GRAMMAR);
-		file.create(source, true, monitor());
-		project.build(IncrementalProjectBuilder.FULL_BUILD, monitor());
-		waitForAutoBuild();
-		generatedFile = project.getFile("./other-gen/Minimal2.xtext.txt");
-		assertTrue(generatedFile.exists());
-		
-		// Test file deletion
+	private void deleteModelFileAndAssertGenFileAlsoGotDeleted(IFile file, IResource generatedFile) throws Exception {
 		file.delete(true, monitor());
 		waitForAutoBuild();
 		assertTrue(!generatedFile.exists());
@@ -117,16 +115,11 @@ public class MultiGeneratorXtextBuilderParticipantTest extends AbstractBuilderTe
 		preferences.setValue(getDefaultOutputDirectoryKey(), directoryName);
 	}
 	
-	protected void createTwoReferencedProjects() throws CoreException {
-		IJavaProject firstProject = createJavaProjectWithRootSrc("first");
-		IJavaProject secondProject = createJavaProjectWithRootSrc("second");
+	@SuppressWarnings("unused") // use later
+	private void createTwoReferencedProjects() throws CoreException {
+		IJavaProject firstProject = createXtextJavaProject("first");
+		IJavaProject secondProject = createXtextJavaProject("second");
 		addProjectReference(secondProject, firstProject);
-	}
-
-	protected IJavaProject createJavaProjectWithRootSrc(String string) throws CoreException {
-		IJavaProject project = createJavaProject(string);
-		addNature(project.getProject(), XtextProjectHelper.NATURE_ID);
-		return project;
 	}
 
 	public static void waitForResourceCleanerJob() {
