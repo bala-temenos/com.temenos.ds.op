@@ -30,7 +30,6 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.xtext.builder.BuilderParticipant;
 import org.eclipse.xtext.builder.EclipseOutputConfigurationProvider;
 import org.eclipse.xtext.builder.EclipseResourceFileSystemAccess2;
-import org.eclipse.xtext.generator.IFileSystemAccess;
 import org.eclipse.xtext.generator.IGenerator;
 import org.eclipse.xtext.generator.OutputConfiguration;
 import org.eclipse.xtext.resource.IResourceDescription.Delta;
@@ -55,7 +54,7 @@ import com.temenos.ds.op.xtext.ui.internal.se.JdtBasedClassLoaderProvider;
  * @author Michael Vorburger
  */
 public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /* implements IXtextBuilderParticipant */ {
-	// TODO MAYBE later send a proposal to Xtext core to split up BuilderParticipant so it's more suitable to be extended here
+	// TODO Xtext MAYBE later send a proposal to Xtext core to split up BuilderParticipant so it's more suitable to be extended here
 	
 	private final static Logger logger = LoggerFactory.getLogger(MultiGeneratorsXtextBuilderParticipant.class);
 	
@@ -65,7 +64,6 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 	private @Inject	JdtBasedClassLoaderProvider classloaderProvider;
 	private SingleThreadLocal<IBuildContext> buildContextLocal = new SingleThreadLocal<IBuildContext>();
 	private @Inject PreferenceStoreAccessImpl preferenceStoreAccess;
-
 	private SubMonitor subMonitor;
 	
 	public PreferenceStoreAccessImpl getPreferenceStoreAccess() {
@@ -91,26 +89,26 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 		if (delta.getUri().scheme().equals("java"))
 			return; // Skip any Xbase java:/Objects/test.Generator like resources
 		
-		// copy/paste from super() -- TODO refactor BuilderParticipant with more protected methods so that this can be done cleanly
+		// copy/paste from super() -- TODO Xtext refactor BuilderParticipant with more protected methods so that this can be done cleanly
 		Resource resource = context.getResourceSet().getResource(delta.getUri(), true);
 		if (shouldGenerate(resource, context)) {
 			try {
 				registerCurrentSourceFolder(context, delta, fileSystemAccess);
-				// TODO inject generator with lang specific configuration.. is to return only class, not instance, and re-lookup from lang specific injector obtained from extension going to have any perf. drawback? measure it.
+				// TODO LATER inject generator with lang specific configuration.. is to return only class, not instance, and re-lookup from lang specific injector obtained from extension going to have any perf. drawback? measure it.
 				for (Entry<IGenerator, String> entry : getGenerators().entrySet()) {
 					IGenerator generator = entry.getKey();
 					String generatorId = entry.getValue();
 					generate(context, fileSystemAccess, resource, generator, generatorId);
 				}
 
-				// TODO look up a list, don't hard-code just one, as for first test..
+				// TODO HIGH look up a list, don't hard-code just one, as for first test..
 				String generatorClassName = "test.Generator";
 				classloaderProvider.setParentClassLoaderClass(IGenerator.class);
 				Optional<IGenerator> generator = classloaderProvider.getInstance(resource, generatorClassName);
 				if (!generator.isPresent()) {
 					final String msg = "Generator class could not be found on this project: " + generatorClassName;
 					logger.error(msg);
-					// TODO Why is this not shown to the users in the UI?? Would it be, if it was a CoreException? Then they all need to be wrapped..
+					// TODO HIGH Why is this not shown to the users in the UI?? Would it be, if it was a CoreException? Then they all need to be wrapped..
 					throw new IllegalStateException(msg);
 				}
 				
@@ -130,8 +128,8 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 
 	protected void generate(IBuildContext context, EclipseResourceFileSystemAccess2 fileSystemAccess, Resource resource, IGenerator generator, String generatorId) throws CoreException {
 		preferenceStoreAccess.setLanguageNameAsQualifier(generatorId);
-		// This is copy/pasted from BuilderParticipant.build() - TODO refactor Xtext (PR) to be able to share code
-		// TODO do we need to copy/paste more here.. what's all the Cleaning & Markers stuff??  
+		// This is copy/pasted from BuilderParticipant.build() - TODO Xtext refactor (PR) to be able to share code
+		// TODO HIGH do we need to copy/paste more here.. what's all the Cleaning & Markers stuff??  
 		final Map<String, OutputConfiguration> outputConfigurations = getOutputConfigurations(context, generatorId);
 		refreshOutputFolders(context, outputConfigurations, subMonitor.newChild(1));
 		fileSystemAccess.setOutputConfigurations(outputConfigurations);
@@ -147,12 +145,11 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 			IProject builtProject,Collection<OutputConfiguration> outputConfigurations)
 			throws CoreException {
 
-		// TODO: Check the impact of modifying this method on other tasks
 		Map<OutputConfiguration, Iterable<IMarker>> generatorMarkers = newHashMap();
 		
 		final ImmutableMap<IGenerator, String> generators = getGenerators();
 		if (generators == null)
-			// TODO This shouldn't happen, but it sometimes does, seen NPE in following line, debug why, and fix root cause
+			// TODO HIGH This shouldn't happen, but it sometimes does, seen NPE in following line, debug why, and fix root cause
 			return generatorMarkers;
 		
 		for (Entry<IGenerator, String> entry : generators.entrySet()) {
@@ -208,7 +205,7 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 	}
 
 	// This inner class is inspired by org.eclipse.xtext.builder.impl.RegistryBuilderParticipant.BuilderParticipantReader - 
-	// TODO If later sending a proposal to Xtext core to split up BuilderParticipant so it's more suitable to be extended here, refactor to make this re-usable across instead copy/paste 
+	// TODO Xtext If later sending a proposal to Xtext core to split up BuilderParticipant so it's more suitable to be extended here, refactor to make this re-usable across instead copy/paste 
 	// It's intentionally static to make sure it doesn't access members of the outer class, and will thus be easier to factor out later 
 	public static class GeneratorReader<T> extends RegistryReader {
 		private final static Logger logger = LoggerFactory.getLogger(MultiGeneratorsXtextBuilderParticipant.GeneratorReader.class);
@@ -261,24 +258,32 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 			try {
 				return Optional.of((T) element.createExecutableExtension(ATT_CLASS));
 			} catch (CoreException e) {
-				logError(element, "CoreException from createExecutableExtension(): " + e.getMessage() /* TODO , e */);
+				logError(element, e);
 			} catch (NoClassDefFoundError e) {
-				logError(element, e.getMessage());
+				logError(element, e);
 			}
 			return Optional.absent();
 		}
 
+		protected void logError(IConfigurationElement element, Throwable e) {
+			logger.error(getErrorTag(element), e);
+		}
+
 		@Override
 		protected void logError(IConfigurationElement element, String text) {
-			IExtension extension = element.getDeclaringExtension();
-			logger.error("Plugin " + extension.getContributor().getName() + ", extension " + extension.getExtensionPointUniqueIdentifier()); //$NON-NLS-1$ //$NON-NLS-2$
+			logger.error(getErrorTag(element));
 			logger.error(text);
+		}
+		
+		protected String getErrorTag(IConfigurationElement element) {
+			IExtension extension = element.getDeclaringExtension();
+			return "Plugin " + extension.getContributor().getName() + ", extension " + extension.getExtensionPointUniqueIdentifier(); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 	
 	@Override
 	protected boolean isEnabled(IBuildContext context) {
-		// TODO better later read this from.. an IGenerator specific Preference
+		// TODO HIGH TDD better later read this from.. an IGenerator specific Preference
 		return true;
 	}
 	
