@@ -26,7 +26,6 @@ import com.google.inject.Module;
  * 
  * @author Michael Vorburger
  */
-@SuppressWarnings("restriction")
 public class NODslActivator extends AbstractUIPlugin {
 	private static final Logger logger = LoggerFactory.getLogger(NODslActivator.class);
 	
