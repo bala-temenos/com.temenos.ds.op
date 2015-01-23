@@ -110,6 +110,7 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 				
 				final Object generator2 = generator.get();
 				IGenerator generator3 = (IGenerator) generator2;
+				// TODO generatorId could be read from an fixed annotation on classname (which would remain stable on refactorings)
 				generate(context, fileSystemAccess, resource, generator3, generatorClassName);
 
 			} catch (RuntimeException e) {
@@ -128,9 +129,9 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 		final Map<String, OutputConfiguration> outputConfigurations = getOutputConfigurations(context, generatorId);
 		// TODO refreshOutputFolders(context, outputConfigurations, subMonitor.newChild(1));
 		fileSystemAccess.setOutputConfigurations(outputConfigurations);
+		GenerationTimeLogger logger = GenerationTimeLogger.getInstance();
 		StopWatch stopWatch = new StopWatch();
 		generator.doGenerate(resource, fileSystemAccess);
-		GenerationTimeLogger logger = GenerationTimeLogger.getInstance();
 		logger.updateTime(generatorId, (int)stopWatch.reset());
 		logger.updateCount(generatorId, 1);
 	}
