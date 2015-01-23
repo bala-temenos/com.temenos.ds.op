@@ -10,6 +10,8 @@
  ******************************************************************************/
 package com.temenos.ds.op.xtext.ui.internal.se;
 
+import java.net.URLClassLoader;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaProject;
@@ -33,6 +35,14 @@ public class JdtBasedClassLoaderProvider extends JdtBasedProcessorProvider {
 	protected ClassLoader getParentClassLoader() {
 		// NOTE super() is hard-coded to TransformationContext - but we use IGenerator
 		return parentClassLoaderClass.getClassLoader();
+	}
+
+	public Optional<URLClassLoader> getClassLoader(IProject project) {
+		final Optional<IJavaProject> javaProject = getJavaProject(project);
+		if (javaProject.isPresent())
+			return Optional.fromNullable(createClassLoaderForJavaProject(javaProject.get()));
+		else
+			return Optional.absent();
 	}
 	
 	@SuppressWarnings("unchecked")

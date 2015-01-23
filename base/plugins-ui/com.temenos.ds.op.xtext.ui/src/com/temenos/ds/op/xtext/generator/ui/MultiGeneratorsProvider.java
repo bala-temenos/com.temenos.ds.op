@@ -28,7 +28,7 @@ public class MultiGeneratorsProvider implements IGeneratorsProvider {
 //			Arrays.asList(new PluginsGeneratorsProvider(), new RuntimeJDTGeneratorsProvider()));
 	
 	protected @Inject PluginsGeneratorsProvider pluginsGeneratorsProvider;
-	protected @Inject RuntimeJDTGeneratorsProvider runtimeJDTGeneratorsProvider;
+	protected @Inject RuntimeJDTServiceLoaderGeneratorsProvider runtimeJDTGeneratorsProvider;
 	
 	@Override
 	public Iterable<GeneratorIdPair> getGenerators(IProject project) {

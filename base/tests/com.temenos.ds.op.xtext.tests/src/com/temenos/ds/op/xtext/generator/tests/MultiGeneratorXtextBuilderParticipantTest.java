@@ -102,9 +102,14 @@ public class MultiGeneratorXtextBuilderParticipantTest extends AbstractBuilderTe
 		
 		IProject project = javaProject.getProject();
 		IFile generatorJavaFile = createFile(project, "src/test/Generator.java", MINIMAL_VALID_GENERATOR);
+		IFile servicesFile = createFile(project, "src/META-INF/services/org.eclipse.xtext.generator.IGenerator", "test.Generator");
 		createFileAndAssertGenFile(project, "src/Minimal3.xtext", "test.Generator", "./src-gen", "src-gen/Minimal3.xtext.inproject.txt");		
 		createFileAndAssertGenFile(project, "src/Minimal3.xtext", "test.Generator", "./gen", "gen/Minimal3.xtext.inproject.txt");		
+
+		// TODO CHANGE generator, in running IDE, and make sure new file gets gen and no longer old one
+
 		generatorJavaFile.delete(true, monitor());
+		servicesFile.delete(true, monitor());
 	}
 
 	// TODO propose this for core Xtext org.eclipse.xtext.junit4.ui.util.JavaProjectSetupUtil
@@ -161,14 +166,22 @@ public class MultiGeneratorXtextBuilderParticipantTest extends AbstractBuilderTe
 	private IFile createFile(IProject project, String fileName, String fileContent) throws CoreException {
 		IFile file = project.getFile(fileName);
 		IFolder parentFolder = (IFolder) file.getParent();
-		if (!parentFolder.exists())
-			parentFolder.create(true, true, monitor());
+		mkdirs(parentFolder);
 		file.create(new StringInputStream(fileContent), true, monitor());
 		project.build(IncrementalProjectBuilder.FULL_BUILD, monitor());
 		waitForAutoBuild();
 		return file;
 	}
 
+	private void mkdirs(IFolder folder) throws CoreException {
+		if (folder.exists())
+			return;
+		IContainer container = folder.getParent();
+		if (!container.exists())
+			mkdirs((IFolder) container);
+		folder.create(true, true, monitor());
+	}
+	
 	private void deleteModelFileAndAssertGenFileAlsoGotDeleted(IFile file, IResource generatedFile) throws Exception {
 		file.delete(true, monitor());
 		waitForAutoBuild();
