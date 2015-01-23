@@ -68,7 +68,7 @@ public class MultiGeneratorXtextBuilderParticipantTest extends AbstractBuilderTe
 	// This is a minimalistic IGenerator implementation
 	private static final String MINIMAL_VALID_GENERATOR = "package test;\nimport org.eclipse.emf.ecore.resource.Resource;\nimport org.eclipse.xtext.generator.IFileSystemAccess;\nimport org.eclipse.xtext.generator.IGenerator;\npublic class Generator implements IGenerator {\n	@Override\n	public void doGenerate(Resource input, IFileSystemAccess fsa) {\n		fsa.generateFile(input.getURI().lastSegment() + \".inproject.txt\", \"hello\");\n	}\n}";
 	
-	private static final String TEST_GENERATOR_ID = "com.temenos.ds.op.xtext.generator.tests.TestMultiGeneratorID";
+	private static final String PLUGIN_TEST_GENERATOR_ID = "com.temenos.ds.op.xtext.generator.tests.TestMultiGeneratorID"; // matching plugin.xml
 	private MultiGeneratorsXtextBuilderParticipant participant;
 	private PreferenceStoreAccessImpl preferenceStoreAccess;
 
@@ -89,8 +89,8 @@ public class MultiGeneratorXtextBuilderParticipantTest extends AbstractBuilderTe
 	@Test
 	public void testMultiGeneratorXtextBuilderParticipantWithGeneratorInPlugin() throws Exception {
 		IProject project = createXtextJavaProject("testGeneratorPlugin").getProject();
-		createFileAndAssertGenFile(project, "src/Minimal1.xtext", "./test-gen", "test-gen/Minimal1.xtext.txt");		
-		createFileAndAssertGenFile(project, "src/Minimal2.xtext", "./other-gen", "other-gen/Minimal2.xtext.txt");		
+		createFileAndAssertGenFile(project, "src/Minimal1.xtext", PLUGIN_TEST_GENERATOR_ID, "./test-gen", "test-gen/Minimal1.xtext.txt");		
+		createFileAndAssertGenFile(project, "src/Minimal2.xtext", PLUGIN_TEST_GENERATOR_ID, "./other-gen", "other-gen/Minimal2.xtext.txt");		
 	}
 
 	@Test
@@ -102,8 +102,8 @@ public class MultiGeneratorXtextBuilderParticipantTest extends AbstractBuilderTe
 		
 		IProject project = javaProject.getProject();
 		IFile generatorJavaFile = createFile(project, "src/test/Generator.java", MINIMAL_VALID_GENERATOR);
-		createFileAndAssertGenFile(project, "src/Minimal3.xtext", "./src-gen", "src-gen/Minimal3.xtext.inproject.txt");		
-		createFileAndAssertGenFile(project, "src/Minimal3.xtext", "./gen", "gen/Minimal3.xtext.inproject.txt");		
+		createFileAndAssertGenFile(project, "src/Minimal3.xtext", "test.Generator", "./src-gen", "src-gen/Minimal3.xtext.inproject.txt");		
+		createFileAndAssertGenFile(project, "src/Minimal3.xtext", "test.Generator", "./gen", "gen/Minimal3.xtext.inproject.txt");		
 		generatorJavaFile.delete(true, monitor());
 	}
 
@@ -130,11 +130,11 @@ public class MultiGeneratorXtextBuilderParticipantTest extends AbstractBuilderTe
 		return newClassPathEntry;
 	}
 	
-	private void createFileAndAssertGenFile(IProject project, String sourceFileName, String outputFolderName, String genFileName) throws Exception {
-		setDefaultOutputFolderDirectory(project, TEST_GENERATOR_ID, outputFolderName);
+	private void createFileAndAssertGenFile(IProject project, String sourceFileName, String generatorID, String outputFolderName, String expectedGenFileName) throws Exception {
+		setDefaultOutputFolderDirectory(project, generatorID, outputFolderName);
 		IFile model1 = createFile(project, sourceFileName, MINIMAL_VALID_XTEXT_GRAMMAR);
 		waitForAutoBuild();
-		IFile generatedFile = project.getFile(genFileName);
+		IFile generatedFile = project.getFile(expectedGenFileName);
 		assertExists(generatedFile);
 		deleteModelFileAndAssertGenFileAlsoGotDeleted(model1, generatedFile);
 	}
