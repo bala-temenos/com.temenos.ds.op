@@ -46,7 +46,6 @@ import org.eclipse.xtext.ui.XtextProjectHelper;
 import org.eclipse.xtext.ui.editor.preferences.PreferenceConstants;
 import org.eclipse.xtext.ui.editor.preferences.PreferenceStoreAccessImpl;
 import org.eclipse.xtext.util.StringInputStream;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.inject.Injector;

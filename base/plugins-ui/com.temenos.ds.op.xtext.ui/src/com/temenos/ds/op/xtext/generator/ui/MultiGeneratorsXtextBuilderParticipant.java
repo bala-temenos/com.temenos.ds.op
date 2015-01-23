@@ -41,7 +41,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.HashBiMap;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.temenos.ds.op.xtext.ui.internal.NODslActivator;
@@ -60,7 +61,7 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 	
 	// These three, incl. volatile, inspired by (copy/pasted from) org.eclipse.xtext.builder.impl.RegistryBuilderParticipant
 	private @Inject	IExtensionRegistry extensionRegistry;
-	private volatile ImmutableMap<IGenerator, String> generatorToId;
+	private volatile Iterable<GeneratorIdPair> generatorToId;
 	private @Inject	JdtBasedClassLoaderProvider classloaderProvider;
 	private SingleThreadLocal<IBuildContext> buildContextLocal = new SingleThreadLocal<IBuildContext>();
 	private @Inject PreferenceStoreAccessImpl preferenceStoreAccess;
@@ -95,9 +96,9 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 			try {
 				registerCurrentSourceFolder(context, delta, fileSystemAccess);
 				// TODO LATER inject generator with lang specific configuration.. is to return only class, not instance, and re-lookup from lang specific injector obtained from extension going to have any perf. drawback? measure it.
-				for (Entry<IGenerator, String> entry : getGenerators().entrySet()) {
-					IGenerator generator = entry.getKey();
-					String generatorId = entry.getValue();
+				for (GeneratorIdPair entry : getGenerators()) {
+					IGenerator generator = entry.getGenerator();
+					String generatorId = entry.getId();
 					generate(context, fileSystemAccess, resource, generator, generatorId);
 				}
 
@@ -147,13 +148,13 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 
 		Map<OutputConfiguration, Iterable<IMarker>> generatorMarkers = newHashMap();
 		
-		final ImmutableMap<IGenerator, String> generators = getGenerators();
+		final Iterable<GeneratorIdPair> generators = getGenerators();
 		if (generators == null)
 			// TODO HIGH This shouldn't happen, but it sometimes does, seen NPE in following line, debug why, and fix root cause
 			return generatorMarkers;
 		
-		for (Entry<IGenerator, String> entry : generators.entrySet()) {
-			String generatorId = entry.getValue();
+		for (GeneratorIdPair entry : generators) {
+			String generatorId = entry.getId();
 			final Map<String, OutputConfiguration> modifiedConfigs = getOutputConfigurations(buildContextLocal.get(), generatorId);
 			if (generatorMarkers.isEmpty()) {
 				generatorMarkers = super.getGeneratorMarkers(builtProject, modifiedConfigs.values());
@@ -177,8 +178,8 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 	}
 	
 	// inspired by (copy/pasted from) org.eclipse.xtext.builder.impl.RegistryBuilderParticipant.getParticipants()
-	protected ImmutableMap<IGenerator, String> getGenerators() {
-		ImmutableMap<IGenerator, String> result = generatorToId;
+	protected Iterable<GeneratorIdPair> getGenerators() {
+		Iterable<GeneratorIdPair> result = generatorToId;
 		if (generatorToId == null) {
 			result = initGenerators();
 		}
@@ -187,8 +188,8 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 	
 	// inspired by (copy/pasted from) org.eclipse.xtext.builder.impl.RegistryBuilderParticipant.initParticipants()
 	// If later sending a proposal to Xtext core to split up BuilderParticipant so it's more suitable to be extended here, refactor to make this re-usable across instead copy/paste 
-	protected synchronized ImmutableMap<IGenerator, String> initGenerators() {
-		ImmutableMap<IGenerator, String> result = generatorToId;
+	protected synchronized Iterable<GeneratorIdPair> initGenerators() {
+		Iterable<GeneratorIdPair> result = generatorToId;
 		if (result == null) {
 			if (generatorToId == null) {
 				HashBiMap<String, IGenerator> idToGenerator = HashBiMap.create();
@@ -198,7 +199,11 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 					GeneratorReader<IGenerator> reader = new GeneratorReader<IGenerator>(extensionRegistry, pluginID, "multigenerator", idToGenerator);
 					reader.readRegistry();
 				}
-				generatorToId = ImmutableMap.copyOf(idToGenerator.inverse());
+				Builder<GeneratorIdPair> resultBuilder = ImmutableList.builder();
+				for (Entry<String, IGenerator> entry : idToGenerator.entrySet()) {
+					resultBuilder.add(GeneratorIdPair.of(entry.getValue(), entry.getKey()));
+				}
+				generatorToId = resultBuilder.build();
 			}
 		}
 		return result;
