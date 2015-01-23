@@ -24,11 +24,13 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.emf.ecore.plugin.RegistryReader;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.xtext.builder.BuilderParticipant;
 import org.eclipse.xtext.builder.EclipseOutputConfigurationProvider;
 import org.eclipse.xtext.builder.EclipseResourceFileSystemAccess2;
+import org.eclipse.xtext.generator.IFileSystemAccess;
 import org.eclipse.xtext.generator.IGenerator;
 import org.eclipse.xtext.generator.OutputConfiguration;
 import org.eclipse.xtext.resource.IResourceDescription.Delta;
@@ -61,8 +63,10 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 	private @Inject	IExtensionRegistry extensionRegistry;
 	private volatile ImmutableMap<IGenerator, String> generatorToId;
 	private @Inject	JdtBasedClassLoaderProvider classloaderProvider;
-	private ThreadLocal<IBuildContext> buildContextLocal = new ThreadLocal<IBuildContext>();
+	private SingleThreadLocal<IBuildContext> buildContextLocal = new SingleThreadLocal<IBuildContext>();
 	private @Inject PreferenceStoreAccessImpl preferenceStoreAccess;
+
+	private SubMonitor subMonitor;
 	
 	public PreferenceStoreAccessImpl getPreferenceStoreAccess() {
 		return preferenceStoreAccess;
@@ -72,9 +76,11 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 	public void build(IBuildContext context, IProgressMonitor monitor) throws CoreException {
 		try {
 			buildContextLocal.set(context);
+			subMonitor = SubMonitor.convert(monitor, context.getBuildType() == BuildType.RECOVERY ? 5 : 3);
 			super.build(context, monitor);
 		} finally {
 			buildContextLocal.remove();
+			subMonitor = null;
 		}
 	}
 
@@ -110,7 +116,7 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 				
 				final Object generator2 = generator.get();
 				IGenerator generator3 = (IGenerator) generator2;
-				// TODO generatorId could be read from an fixed annotation on classname (which would remain stable on refactorings)
+				// TODO LATER generatorId could be read from an fixed annotation on classname (which would remain stable on refactorings)
 				generate(context, fileSystemAccess, resource, generator3, generatorClassName);
 
 			} catch (RuntimeException e) {
@@ -122,12 +128,12 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 		}
 	}
 
-	protected void generate(IBuildContext context, EclipseResourceFileSystemAccess2 fileSystemAccess, Resource resource, IGenerator generator, String generatorId) {
+	protected void generate(IBuildContext context, EclipseResourceFileSystemAccess2 fileSystemAccess, Resource resource, IGenerator generator, String generatorId) throws CoreException {
 		preferenceStoreAccess.setLanguageNameAsQualifier(generatorId);
 		// This is copy/pasted from BuilderParticipant.build() - TODO refactor Xtext (PR) to be able to share code
 		// TODO do we need to copy/paste more here.. what's all the Cleaning & Markers stuff??  
 		final Map<String, OutputConfiguration> outputConfigurations = getOutputConfigurations(context, generatorId);
-		// TODO refreshOutputFolders(context, outputConfigurations, subMonitor.newChild(1));
+		refreshOutputFolders(context, outputConfigurations, subMonitor.newChild(1));
 		fileSystemAccess.setOutputConfigurations(outputConfigurations);
 		GenerationTimeLogger logger = GenerationTimeLogger.getInstance();
 		StopWatch stopWatch = new StopWatch();

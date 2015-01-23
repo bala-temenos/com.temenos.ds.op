@@ -46,6 +46,7 @@ import org.eclipse.xtext.ui.XtextProjectHelper;
 import org.eclipse.xtext.ui.editor.preferences.PreferenceConstants;
 import org.eclipse.xtext.ui.editor.preferences.PreferenceStoreAccessImpl;
 import org.eclipse.xtext.util.StringInputStream;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.inject.Injector;
@@ -102,6 +103,7 @@ public class MultiGeneratorXtextBuilderParticipantTest extends AbstractBuilderTe
 		
 		IProject project = javaProject.getProject();
 		IFile generatorJavaFile = createFile(project, "src/test/Generator.java", MINIMAL_VALID_GENERATOR);
+		createFileAndAssertGenFile(project, "src/Minimal3.xtext", "./src-gen", "src-gen/Minimal3.xtext.inproject.txt");		
 		createFileAndAssertGenFile(project, "src/Minimal3.xtext", "./gen", "gen/Minimal3.xtext.inproject.txt");		
 		generatorJavaFile.delete(true, monitor());
 	}
