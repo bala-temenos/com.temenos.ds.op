@@ -10,6 +10,7 @@
  ******************************************************************************/
 package com.temenos.ds.op.xtext.generator.ui;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -57,8 +58,8 @@ public class PluginsGeneratorsProvider implements IGeneratorsProvider {
 			result = initGenerators();
 			stopWatch.resetAndLog(getClass().getName() + " initGenerators() - should only be called once!");
 		}
-// TODO	if (result == null)
-//			throw new IllegalStateException();
+		if (result == null)
+			return Collections.emptySet();
 		return result;
 	}
 	
