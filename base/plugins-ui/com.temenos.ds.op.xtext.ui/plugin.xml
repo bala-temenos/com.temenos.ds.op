@@ -5,7 +5,9 @@
    <extension
          point="org.eclipse.xtext.builder.participant">
       <participant
+            fileExtensions="eson,xcore,xtext"
             class="com.temenos.ds.op.xtext.ui.internal.NODslExecutableExtensionFactory:com.temenos.ds.op.xtext.generator.ui.MultiGeneratorsXtextBuilderParticipant">
+            <!-- fileExtension xtext is *JUST* for the MultiGeneratorXtextBuilderParticipantTest, which was written with Minimal1/2.xtext, instead ESON. TODO rewrite test, and remove xtext extension -->
       </participant>
    </extension>
     <extension
