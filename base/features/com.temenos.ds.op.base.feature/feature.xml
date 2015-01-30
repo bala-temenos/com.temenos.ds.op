@@ -24,7 +24,7 @@
       <import feature="org.eclipse.jgit.java7"/>
       <import feature="org.eclipse.jgit.http.apache"/>
       <import feature="org.eclipse.m2e.feature"/>
-      <import feature="org.eclipse.m2e.logback.feature"/>
+<!-- DS-8355: <import feature="org.eclipse.m2e.logback.feature"/> -->
       <import feature="org.eclipse.wst.xml_ui.feature"/>
       <import feature="org.eclipse.equinox.server.jetty"/>
       <import plugin="org.apache.commons.collections" version="3.2.0" />
