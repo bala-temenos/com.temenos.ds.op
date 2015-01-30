@@ -13,6 +13,7 @@ package com.temenos.ds.op.xtext.generator.ui;
 import static com.google.common.collect.Maps.newHashMap;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -115,20 +116,20 @@ public class MultiGeneratorsXtextBuilderParticipant extends BuilderParticipant /
 			throws CoreException {
 
 		Map<OutputConfiguration, Iterable<IMarker>> generatorMarkers = newHashMap();
+		for (OutputConfiguration outputConfiguration : outputConfigurations) {
+			// We need to do this because there may not be a Generator for each OutputConfiguration (yet/anymore?) but we still need an entry - else we get a NPE later
+			generatorMarkers.put(outputConfiguration, Collections.<IMarker>emptyList());
+		}
 		
 		final Iterable<GeneratorIdPair> generators = generatorsProvider.getGenerators(builtProject);
 		for (GeneratorIdPair entry : generators) {
 			String generatorId = entry.getId();
 			final Map<String, OutputConfiguration> modifiedConfigs = getOutputConfigurations(buildContextLocal.get(), generatorId);
-			if (generatorMarkers.isEmpty()) {
-				generatorMarkers = super.getGeneratorMarkers(builtProject, modifiedConfigs.values());
-			} else {
-				Map<OutputConfiguration, Iterable<IMarker>> markers = super.getGeneratorMarkers(builtProject, modifiedConfigs.values());
-				for (Object key : markers.keySet()) {
-					Iterable<IMarker> mainMarkers = generatorMarkers.get(key);
-					Iterable<IMarker> newMarkers = markers.get(key);
-					generatorMarkers.put((OutputConfiguration) key,	Iterables.concat(mainMarkers, newMarkers));
-				}
+			Map<OutputConfiguration, Iterable<IMarker>> markers = super.getGeneratorMarkers(builtProject, modifiedConfigs.values());
+			for (OutputConfiguration key : markers.keySet()) {
+				Iterable<IMarker> mainMarkers = generatorMarkers.get(key);
+				Iterable<IMarker> newMarkers = markers.get(key);
+				generatorMarkers.put((OutputConfiguration) key,	Iterables.concat(mainMarkers, newMarkers));
 			}
 		}
 		return generatorMarkers;
